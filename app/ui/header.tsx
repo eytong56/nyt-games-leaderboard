@@ -16,7 +16,7 @@ export default function Header() {
           className="hover:text-gray-500"
         />
       </a>
-      <h1 className="font-bold text-2xl">NYT Games Leaderboard | Mini</h1>
+      <h1 className="font-bold text-2xl">NYT Games Leaderboard <span className="font-light px-1">|</span> Mini</h1>
       <div className="flex-1 flex flex-col justify-start items-end gap-2">
         <SyncButton />
         <div className="text-xs text-right text-gray-500">

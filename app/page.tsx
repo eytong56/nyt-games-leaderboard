@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Header from "@/app/ui/header";
 import Sidebar from "@/app/ui/stats/sidebar";
 import WeeklyDisplay from "@/app/ui/weekly/weekly-display";
