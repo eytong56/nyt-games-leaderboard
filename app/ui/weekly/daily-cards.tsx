@@ -24,21 +24,23 @@ export function Card({ dailyBoard }: { dailyBoard: DailyBoard }) {
   const { dayOfWeek, formattedDate } = formatDate(date);
 
   return (
-    <div className="grow-1 flex flex-col items-center min-w-48 max-w-96 gap-6 pt-6 pb-10 px-6 bg-white rounded-lg border border-gray-400">
+    <div className="grow-1 flex flex-col items-center min-w-48 max-w-96 gap-6 pt-6 pb-10 px-6 bg-white rounded-lg border border-gray-400 hover:drop-shadow-[0_3px_0] drop-shadow-neutral-400">
       <div className="flex flex-col items-center gap-3">
         <Crown winner={determineWinner(entries)} />
         <h3>
           <span className="font-semibold">{dayOfWeek},</span> {formattedDate}
         </h3>
       </div>
-      <Leaderboard entries={entries} type="seconds"/>
-      <Crossword
-        puzzleBoard={
-          !puzzle_board || !entries || entries.length < 2
-            ? placeholderBoard
-            : puzzle_board
-        }
-      />
+      <Leaderboard entries={entries} type="seconds" />
+      <div className="grow flex flex-col justify-center">
+        <Crossword
+          puzzleBoard={
+            !puzzle_board || !entries || entries.length < 2
+              ? placeholderBoard
+              : puzzle_board
+          }
+        />
+      </div>
       <a
         href={formatLink(date)}
         target="_blank"
