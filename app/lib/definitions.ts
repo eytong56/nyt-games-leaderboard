@@ -21,17 +21,17 @@ export type DailyBoard = {
 // Database types
 
 export type UsersTable = {
-  id: string;
+  id: string; // UUID
   name: string;
-  nyt_s: string;
+  token_hash: string;
 };
 
 export type PuzzlesTable = {
   id: number;
   date: string;
+  board: string;
   rows: number;
-  columns: number;
-  puzzle_board: string;
+  cols: number;
 };
 
 export type SolvesTable = {
