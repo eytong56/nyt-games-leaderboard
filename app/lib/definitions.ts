@@ -1,9 +1,9 @@
 export type User = "shapes" | "tcng";
 
 export type PuzzleBoard = {
+  board: string;
   rows: number;
   cols: number;
-  board: string;
 };
 
 export type Entry = {
@@ -23,7 +23,7 @@ export type DailyBoard = {
 export type UsersTable = {
   id: string; // UUID
   name: string;
-  token_hash: string;
+  // token_hash: string;
 };
 
 export type PuzzlesTable = {

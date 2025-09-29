@@ -15,12 +15,22 @@ export function SyncButton() {
   );
 }
 
-export function NavButton({ direction }: { direction: "left" | "right" }) {
+export function NavButton({
+  direction,
+  handleClick,
+}: {
+  direction: "left" | "right";
+  handleClick: (direction: "left" | "right") => void;
+}) {
   const icon =
     direction === "left" ? (
       <CaretLeftIcon size={24} />
     ) : (
       <CaretRightIcon size={24} />
     );
-  return <button className="w-12 h-12 flex justify-center items-center bg-white rounded-full border border-gray-400 cursor-pointer hover:bg-neutral-200">{icon}</button>;
+  return (
+    <button onClick={() => handleClick(direction)} className="w-12 h-12 flex justify-center items-center bg-white rounded-full border border-gray-400 cursor-pointer hover:bg-neutral-200">
+      {icon}
+    </button>
+  );
 }

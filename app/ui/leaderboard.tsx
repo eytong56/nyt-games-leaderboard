@@ -16,7 +16,7 @@ export default function Leaderboard({
   entries: Entry[] | undefined;
   type: "count" | "seconds";
 }) {
-  if (!entries) {
+  if (!entries || entries.length == 0) {
     // return <div className="text-gray-500 text-sm">No entries available</div>;
     entries = [missingUser("shapes"), missingUser("tcng")];
   }

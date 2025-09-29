@@ -57,7 +57,7 @@ const solves: SolvesTable[] = [
     id: "placeholder",
     user_id: "placeholder",
     puzzle_id: 23148,
-    seconds: 38,
+    seconds: 32,
   },
   {
     id: "placeholder",

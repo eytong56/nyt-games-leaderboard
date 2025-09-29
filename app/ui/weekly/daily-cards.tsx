@@ -1,10 +1,16 @@
 import { ArrowUpRightIcon } from "@phosphor-icons/react/ssr";
-import { formatDate, formatLink, determineWinner } from "@/app/lib/utils";
+import {
+  dateToStringLocal,
+  getOffsetDate,
+  formatDate,
+  formatLink,
+  determineWinner,
+} from "@/app/lib/utils";
 import Leaderboard from "@/app/ui/leaderboard";
 import Crossword from "@/app/ui/weekly/crossword";
 import { DailyBoard, PuzzleBoard } from "@/app/lib/definitions";
-import { dailyBoards } from "@/app/lib/placeholder-data";
 import Crown from "@/app/ui/crown";
+import { fetchWeek } from "@/app/lib/data";
 
 const placeholderBoard: PuzzleBoard = {
   rows: 2,
@@ -12,7 +18,11 @@ const placeholderBoard: PuzzleBoard = {
   board: "#   ",
 };
 
-export function CardWrapper() {
+export async function CardWrapper({ weekStartDate }: { weekStartDate: Date }) {
+  const dailyBoards = await fetchWeek(
+    dateToStringLocal(weekStartDate),
+    dateToStringLocal(getOffsetDate(weekStartDate, 6))
+  );
   const cards = dailyBoards.map((dailyBoard) => {
     return <Card key={dailyBoard.date} dailyBoard={dailyBoard} />;
   });
