@@ -1,3 +1,5 @@
+import "server-only";
+
 import postgres from "postgres";
 import { DailyBoard, Entry } from "@/app/lib/definitions";
 import { dateToStringUTC } from "@/app/lib/utils";

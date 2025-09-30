@@ -81,6 +81,7 @@ async function seedSolves(client = sql) {
 }
 
 export async function GET() {
+  // Do some check here
   try {
     await sql.begin(async (transaction) => {
       await seedUsers(transaction);
