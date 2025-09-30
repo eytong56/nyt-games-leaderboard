@@ -27,7 +27,7 @@ export const formatDateRange = (startDate: Date) => {
   if (startDate.getFullYear() === endDate.getFullYear()) {
     if (startDate.getMonth() === endDate.getMonth()) {
       return `${startDate.toLocaleString("en-US", {
-        month: "long",
+        month: "short",
       })} ${startDate.getDate()} - ${endDate.getDate()}, ${endDate.getFullYear()}
     `;
     } else {
