@@ -4,7 +4,7 @@ import { formatSeconds } from "@/app/lib/utils";
 function missingUser(user: User) {
   return {
     user: user,
-    stat: -1,
+    stat: 0,
     rank: -1,
   };
 }
@@ -34,7 +34,7 @@ export default function Leaderboard({
         <td className="py-1 w-1/5">{rank !== -1 ? rank : "\u00B7"}</td>
         <td className="px-2">{user}</td>
         <td className="font-normal text-gray-500 text-right">
-          {type === "count" ? stat : stat !== -1 ? formatSeconds(stat) : "—"}
+          {type === "count" ? stat : stat !== 0 ? formatSeconds(stat) : "—"}
         </td>
       </tr>
     );

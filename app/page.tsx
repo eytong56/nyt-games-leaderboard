@@ -14,13 +14,12 @@ export default async function Page({
     : new Date();
 
   setDateToMonday(weekStartDate);
-  console.log(weekStartDate);
 
   return (
     <div className="w-full flex flex-col items-center gap-16 pb-16">
       <Header />
       <div className="w-full max-w-300 flex flex-col md:flex-row gap-8 px-8">
-        <Sidebar />
+        <Sidebar weekStartDate={weekStartDate} />
         <WeeklyDisplay weekStartDate={weekStartDate} />
       </div>
     </div>

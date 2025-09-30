@@ -1,31 +1,75 @@
 import postgres from "postgres";
-import { DailyBoard } from "@/app/lib/definitions";
+import { DailyBoard, Entry } from "@/app/lib/definitions";
 import { dateToStringUTC } from "@/app/lib/utils";
 
 const sql = postgres(process.env.DATABASE_URL!, { ssl: "verify-full" });
 
-export async function fetchStats() {
+export async function fetchStats(filters?: { year: number; month?: number }) {
   try {
-    const data = await sql`
+    // Artificially delay response
+    // console.log("Fetching stat data...");
+    // await new Promise((resolve) => setTimeout(resolve, 2000));
 
+    const data = await sql<Entry[]>`
+      WITH ranked_solves AS (
+        SELECT
+          user_id,
+          puzzle_id,
+          RANK() OVER (PARTITION BY puzzle_id ORDER BY seconds) as daily_rank
+        FROM solves
+        JOIN puzzles on solves.puzzle_id = puzzles.id
+        WHERE 
+          ${
+            filters?.year
+              ? sql`EXTRACT(YEAR FROM puzzles.date) = ${filters.year}`
+              : sql`true`
+          }
+          AND ${
+            filters?.month
+              ? sql`EXTRACT(MONTH FROM puzzles.date) = ${filters.month}`
+              : sql`true`
+          }
+      ),
+      valid_puzzles AS (
+        SELECT puzzle_id
+        FROM ranked_solves
+        GROUP BY puzzle_id
+        HAVING COUNT(DISTINCT user_id) > 1
+      )
+      SELECT users.name as user, COUNT(*)::int as stat, RANK() OVER (ORDER BY COUNT(*) DESC)::int as rank
+      FROM ranked_solves
+      JOIN valid_puzzles ON ranked_solves.puzzle_id = valid_puzzles.puzzle_id
+      JOIN users ON ranked_solves.user_id = users.id
+      WHERE daily_rank = 1
+      GROUP BY users.name
+      ORDER BY rank
     `;
-  } catch (error) {}
+
+    return data;
+  } catch (error) {
+    console.error("Database Error:", error);
+    throw new Error("Failed to fetch stats.");
+  }
 }
 
 export async function fetchWeek(startDate: string, endDate: string) {
   try {
+    // Artificially delay response
+    // console.log("Fetching weekly data...");
+    // await new Promise((resolve) => setTimeout(resolve, 3000));
+
     if (new Date(startDate) > new Date(endDate)) {
-      throw new Error("Start date later than end date")
+      throw new Error("Start date later than end date");
     }
     // Thank you to Claude for this SQL query
-    const data = await sql`
+    const data = await sql<DailyBoard[]>`
       WITH date_series AS (
       -- Generate every date in the range
       SELECT generate_series(
         ${startDate}::date,
         ${endDate}::date,
         '1 day'::interval
-      )::date AS date
+      )::date as date
       ),
       ranked_solves AS (
         -- Pre-calculate ranks for each solve within their puzzle
@@ -71,14 +115,12 @@ export async function fetchWeek(startDate: string, endDate: string) {
       GROUP BY date_series.date, ranked_solves.puzzle_id, ranked_solves.board, ranked_solves.rows, ranked_solves.cols
       ORDER BY date_series.date;
     `;
-    console.log(data)
-    const dailyBoards = data.map(
-      (dailyBoard): DailyBoard => ({
-        ...dailyBoard,
-        date: dateToStringUTC(dailyBoard.date),
-      })
-    );
-    
+
+    const dailyBoards: DailyBoard[] = data.map((dailyBoard) => ({
+      ...dailyBoard,
+      date: dateToStringUTC(new Date(dailyBoard.date)),
+    }));
+
     return dailyBoards;
   } catch (error) {
     console.error("Database Error:", error);

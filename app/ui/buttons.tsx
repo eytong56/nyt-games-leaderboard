@@ -9,7 +9,7 @@ export function SyncButton() {
     <>
       <button className="flex flex-row justify-center items-center bg-white py-2 w-30 gap-2 rounded-full border border-gray-700 hover:bg-neutral-200 cursor-pointer">
         <CircleNotchIcon className="hidden" />
-        <div> Sync</div>
+        <div>Sync</div>
       </button>
     </>
   );
