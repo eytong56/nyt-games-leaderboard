@@ -32,7 +32,6 @@ export type PuzzlesTable = {
   board: string;
   rows: number;
   cols: number;
-  created_at: string;
 };
 
 export type SolvesTable = {
@@ -40,7 +39,6 @@ export type SolvesTable = {
   user_id: string;
   puzzle_id: number;
   seconds: number;
-  created_at: string;
 };
 
 export interface NYTPuzzle {
