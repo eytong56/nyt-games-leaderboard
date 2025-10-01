@@ -31,7 +31,8 @@ async function seedPuzzles(client = sql) {
       date DATE NOT NULL UNIQUE,
       board VARCHAR(255) NOT NULL,
       rows INT NOT NULL,
-      cols INT NOT NULL
+      cols INT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
     );
   `;
 
@@ -55,6 +56,7 @@ async function seedSolves(client = sql) {
       user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
       puzzle_id INT NOT NULL REFERENCES puzzles(id) ON DELETE CASCADE,
       seconds INT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(user_id, puzzle_id)
     );
   `;
@@ -80,17 +82,33 @@ async function seedSolves(client = sql) {
   return insertedSolves;
 }
 
-export async function GET() {
-  // Do some check here
-  try {
-    await sql.begin(async (transaction) => {
-      await seedUsers(transaction);
-      await seedPuzzles(transaction);
-      await seedSolves(transaction);
-    });
-
-    return Response.json({ message: "Database seeded successfully" });
-  } catch (error) {
-    return Response.json({ error }, { status: 500 });
-  }
+async function createSyncMetadata(client = sql) {
+  await client`
+    CREATE TABLE IF NOT EXISTS sync_metadata (
+      id SERIAL PRIMARY KEY,
+      last_synced_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      last_sync_status TEXT,
+      start_date DATE NOT NULL,
+      end_date DATE NOT NULL,
+      puzzles_synced INT,
+      solves_synced INT,
+      error_message TEXT
+    )
+  `
 }
+
+// export async function GET() {
+//   // Do some check here
+//   try {
+//     await sql.begin(async (transaction) => {
+//       await seedUsers(transaction);
+//       await seedPuzzles(transaction);
+//       await seedSolves(transaction);
+//       await createSyncMetadata(transaction);
+//     });
+
+//     return Response.json({ message: "Database seeded successfully" });
+//   } catch (error) {
+//     return Response.json({ error }, { status: 500 });
+//   }
+// }

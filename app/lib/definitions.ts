@@ -32,6 +32,7 @@ export type PuzzlesTable = {
   board: string;
   rows: number;
   cols: number;
+  created_at: string;
 };
 
 export type SolvesTable = {
@@ -39,4 +40,49 @@ export type SolvesTable = {
   user_id: string;
   puzzle_id: number;
   seconds: number;
+  created_at: string;
 };
+
+export interface NYTPuzzle {
+  author: string;
+  editor: string;
+  format_type: string;
+  print_date: string;
+  publish_type: string;
+  puzzle_id: number;
+  title: string;
+  version: number;
+  percent_filled: number;
+  solved: boolean;
+  star: string | null;
+}
+
+// NYT API
+
+export interface NYTPuzzlesResponse {
+  status: string;
+  results: NYTPuzzle[];
+}
+
+export interface BoardRaw {
+  cells: ({ guess: string; timestamp: number } | { blank: boolean })[];
+}
+
+export interface NYTSolveResponse {
+  board: BoardRaw;
+  calcs: {
+    percentFilled: number;
+    secondsSpentSolving: number;
+    solved: boolean;
+  };
+  firsts: {
+    opened: number;
+    solved: number;
+  };
+  lastCommitID: string;
+  puzzleID: number;
+  timestamp: number;
+  userID: number;
+  minGuessTime: number;
+  lastSolve: number;
+}

@@ -7,20 +7,22 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 
 import { syncData } from "@/app/lib/services";
-import { dateToStringLocal } from "../lib/utils";
+import { dateToStringLocal, getOffsetDate } from "../lib/utils";
 import { useState } from "react";
 
-export function SyncButton() {
+export function SyncButton({ weekStartDate }: { weekStartDate: Date }) {
   const [loading, setLoading] = useState(false);
 
   const handleClick = async () => {
     console.log("Sync button pressed on client side");
     setLoading(true);
     try {
-      const today = dateToStringLocal(new Date());
-      const result = await syncData(today, today);
+      const result = await syncData({
+        startDate: dateToStringLocal(weekStartDate),
+        endDate: dateToStringLocal(getOffsetDate(weekStartDate, 6)),
+      });
       if (result.success) {
-        console.log("Sync successful:", result.data);
+        console.log("Sync successful:", result.stats);
       } else {
         console.error("Sync failed:", result.error);
         // show error
