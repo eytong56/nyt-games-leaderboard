@@ -18,6 +18,11 @@ export type DailyBoard = {
   entries?: Entry[];
 };
 
+export type SyncStats = {
+  puzzlesSynced: { date: string; id: number }[];
+  numSolvesSynced: number;
+};
+
 // Database types
 
 export type UsersTable = {

@@ -1,26 +1,171 @@
 "use server";
 
-import postgres from "postgres";
+import { sql } from "@/app/lib/db";
 import {
   User,
   NYTPuzzlesResponse,
   NYTPuzzle,
   NYTSolveResponse,
   BoardRaw,
+  SyncStats,
 } from "./definitions";
 import { revalidatePath } from "next/cache";
+import { dateToStringUTC } from "@/app/lib/utils";
 
-const sql = postgres(process.env.DATABASE_URL!, { ssl: "verify-full" });
 const BASE = "https://www.nytimes.com/svc/crosswords";
 const COMMON_DIMENSIONS = [
   { rows: 5, cols: 5 },
   { rows: 7, cols: 7 },
-  { rows: 8, cols: 7 },
   { rows: 7, cols: 8 },
+  // { rows: 8, cols: 7 },
   { rows: 5, cols: 6 },
+  // { rows: 6, cols: 5 },
   { rows: 9, cols: 9 },
   { rows: 6, cols: 9 },
+  { rows: 6, cols: 6 },
+  { rows: 6, cols: 7 },
+  { rows: 8, cols: 6 },
+  { rows: 4, cols: 6 },
 ];
+
+// startDate and endDate INCLUSIVE
+export async function syncData(dateRange: {
+  startDate: string;
+  endDate: string;
+}) {
+  try {
+    const stats0 = await syncUser("shapes", dateRange);
+    const stats1 = await syncUser("tcng", dateRange);
+
+    const puzzlesSynced = [...stats0.puzzlesSynced, ...stats1.puzzlesSynced];
+    const numSolvesSynced = stats0.numSolvesSynced + stats1.numSolvesSynced;
+
+    // 3. Update sync metadata
+    await sql`
+      INSERT INTO sync_metadata (last_sync_status, start_date, end_date, puzzles_synced, solves_synced)
+      VALUES ('success', ${dateRange.startDate}, ${dateRange.endDate}, ${puzzlesSynced.length}, ${numSolvesSynced})
+    `;
+
+    // 4. Reload page
+    revalidatePath("/");
+    return {
+      success: true,
+      stats: {
+        puzzlesSynced: puzzlesSynced,
+        numSolvesSynced: numSolvesSynced,
+      },
+    };
+  } catch (error) {
+    console.error("Sync error:", error);
+    const message =
+      error instanceof Error ? error.message : "Unknown error occurred";
+    // Update sync metadata with failed attempt
+    await sql`
+      INSERT INTO sync_metadata (last_sync_status, start_date, end_date, error_message)
+      VALUES ('failed', ${dateRange.startDate}, ${dateRange.endDate}, ${message})
+    `;
+
+    return {
+      success: false,
+      error: message,
+    };
+  }
+}
+
+export async function backfillYearData(year: number) {
+  // Backfill data for a year, batch of one week at a time
+  if (year > new Date().getFullYear()) {
+    console.error("Sync error: Backfill year does not exist");
+    return {
+      success: false,
+      error: "Backfill year does not exist",
+    };
+  }
+
+  const stats: SyncStats = { puzzlesSynced: [], numSolvesSynced: 0 };
+
+  const lastDate = new Date(`${year}-12-31`);
+  const today = new Date();
+  const maxDate = today > lastDate ? lastDate : today;
+  console.log(maxDate);
+
+  const startDate = new Date(`${year}-01-01`);
+
+  while (startDate < maxDate) {
+    // Calculate this batch's end date
+    const batchEndDate = new Date(startDate);
+    batchEndDate.setDate(startDate.getDate() + 7);
+
+    // Cap to maxDate if needed
+    const actualEndDate = batchEndDate > maxDate ? maxDate : batchEndDate;
+
+    console.log(
+      `Batch date range: ${dateToStringUTC(startDate)} - ${dateToStringUTC(
+        actualEndDate
+      )}`
+    );
+
+    const response = await syncData({
+      startDate: dateToStringUTC(startDate),
+      endDate: dateToStringUTC(actualEndDate),
+    });
+
+    if (!response.success) {
+      return { success: false, error: response.error };
+    }
+
+    stats.puzzlesSynced = [
+      ...stats.puzzlesSynced,
+      ...response.stats!.puzzlesSynced,
+    ];
+    stats.numSolvesSynced += response.stats!.numSolvesSynced;
+
+    if (response.stats!.numSolvesSynced !== 0) {
+      await new Promise((resolve) => setTimeout(resolve, 5000));
+    }
+
+    // Move to next batch
+    startDate.setDate(startDate.getDate() + 7);
+  }
+  return {
+    success: true,
+    stats,
+  };
+}
+
+// Private helpers
+
+async function syncUser(
+  user: User,
+  dateRange: { startDate: string; endDate: string }
+) {
+  if (new Date(dateRange.startDate) > new Date(dateRange.endDate)) {
+    throw new Error("StartDate later than endDate");
+  }
+  let stats: SyncStats = { puzzlesSynced: [], numSolvesSynced: 0 };
+  try {
+    const userId = await getUserId(user);
+    const cookieValue =
+      user === "shapes" ? process.env.NYT_TOKEN_0! : process.env.NYT_TOKEN_1!;
+
+    // 1. Fetch all puzzles from external NYT Games API
+    const allPuzzlesRaw = await getAllPuzzlesRaw(dateRange, cookieValue);
+    if (allPuzzlesRaw === null) {
+      return stats;
+    }
+    const solvedPuzzles = filterSolvedPuzzles(allPuzzlesRaw);
+    const newPuzzles = await filterNewPuzzles(userId, solvedPuzzles);
+    if (newPuzzles.length === 0) {
+      return stats;
+    }
+    // 2. Insert new puzzles and solves into database
+    stats = await insertPuzzleSolves(userId, cookieValue, newPuzzles);
+
+    return stats;
+  } catch (error) {
+    throw new Error(`User syncing failed: ${error}`);
+  }
+}
 
 async function getUserId(user: User) {
   const userResult = await sql`
@@ -60,6 +205,7 @@ async function getAllPuzzlesRaw(
 }
 
 function filterSolvedPuzzles(puzzles: NYTPuzzle[]) {
+  console.log("Filtering raw puzzles for solved...");
   const solvedRawPuzzles = puzzles.filter((puzzle) => puzzle.solved);
   const solvedPuzzles = solvedRawPuzzles.map((puzzle) => ({
     date: puzzle.print_date,
@@ -69,14 +215,17 @@ function filterSolvedPuzzles(puzzles: NYTPuzzle[]) {
   return solvedPuzzles;
 }
 
-async function filterNewPuzzles(userId: string, allPuzzles: NYTPuzzle[]) {
-  const solvedPuzzles = filterSolvedPuzzles(allPuzzles);
+async function filterNewPuzzles(
+  userId: string,
+  solvedPuzzles: { date: string; id: number }[]
+) {
   const solvedIds = solvedPuzzles.map((puzzle) => puzzle.id);
+  console.log("Filtering solved puzzles for new puzzles...");
   const existingIdsResult = await sql`
-      SELECT puzzle_id
-      FROM solves
-      WHERE user_id = ${userId} AND puzzle_id = ANY(${solvedIds})
-    `;
+    SELECT puzzle_id
+    FROM solves
+    WHERE user_id = ${userId} AND puzzle_id = ANY(${solvedIds})
+  `;
 
   const existingIds = new Set(existingIdsResult.map((row) => row.puzzle_id));
   const newPuzzles = solvedPuzzles.filter(
@@ -132,6 +281,7 @@ async function insertPuzzleSolves(
   cookieValue: string,
   puzzles: { date: string; id: number }[]
 ) {
+  console.log("Inserting new puzzles and solves...");
   const solvesDataRequests = puzzles.map((puzzle) =>
     getSolveData(cookieValue, puzzle)
   );
@@ -149,7 +299,7 @@ async function insertPuzzleSolves(
 
   console.log("Inserting puzzles...");
   // Insert puzzles if don't exist
-  const puzzlesResult = await sql`
+  const puzzlesResult: { date: string; id: number }[] = await sql`
     INSERT INTO puzzles (id, date, board, rows, cols)
     SELECT * FROM UNNEST(
       ${ids}::int[],
@@ -177,67 +327,4 @@ async function insertPuzzleSolves(
   console.log("Num of solves inserted:", solvesResult.length);
 
   return { puzzlesSynced: puzzlesResult, numSolvesSynced: solvesResult.length };
-}
-
-async function syncUser(
-  user: User,
-  dateRange: { startDate: string; endDate: string }
-) {
-  try {
-    const userId = await getUserId(user);
-    const cookieValue =
-      user === "shapes" ? process.env.NYT_TOKEN_0! : process.env.NYT_TOKEN_1!;
-
-    const allPuzzlesRaw = await getAllPuzzlesRaw(dateRange, cookieValue);
-    const newPuzzles = await filterNewPuzzles(userId, allPuzzlesRaw);
-    if (newPuzzles.length === 0) {
-      return { puzzlesSynced: [], numSolvesSynced: 0 };
-    }
-    const stats = await insertPuzzleSolves(userId, cookieValue, newPuzzles);
-
-    return stats;
-  } catch (error) {
-    throw new Error(`User syncing failed: ${error}`);
-  }
-}
-
-// startDate and endDate INCLUSIVE
-export async function syncData(dateRange: {
-  startDate: string;
-  endDate: string;
-}) {
-  try {
-    const stats0 = await syncUser("shapes", dateRange);
-    const stats1 = await syncUser("tcng", dateRange);
-
-    // Insert sync attempt into metadata
-    await sql`
-      INSERT INTO sync_metadata (last_sync_status, start_date, end_date, puzzles_synced, solves_synced)
-      VALUES ('success', ${dateRange.startDate}, ${dateRange.endDate}, ${
-        stats0.puzzlesSynced.length + stats1.puzzlesSynced.length
-      }, ${stats0.numSolvesSynced + stats1.numSolvesSynced})
-    `;
-
-    revalidatePath("/");
-    return {
-      success: true,
-      stats: {
-        puzzlesSynced: [...stats0.puzzlesSynced, ...stats1.puzzlesSynced],
-        numSolvesSynced: stats0.numSolvesSynced + stats1.numSolvesSynced,
-      },
-    };
-  } catch (error) {
-    console.error("Sync error:", error);
-    const message = error instanceof Error ? error.message : "Unknown error occurred"
-    // Insert sync attempt into metadata
-    await sql`
-      INSERT INTO sync_metadata (last_sync_status, start_date, end_date, error_message)
-      VALUES ('failed', ${dateRange.startDate}, ${dateRange.endDate}, ${message})
-    `;
-
-    return {
-      success: false,
-      error: message,
-    };
-  }
 }

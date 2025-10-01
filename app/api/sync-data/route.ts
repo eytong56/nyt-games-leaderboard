@@ -10,8 +10,8 @@ export async function GET(request: NextRequest) {
     });
   }
   const today = new Date();
-  const endDate = dateToStringLocal(today)
-  const startDate = dateToStringLocal(getOffsetDate(today, -99)); // Last 100 days
+  const endDate = dateToStringLocal(getOffsetDate(today, 1)) // One day after
+  const startDate = dateToStringLocal(getOffsetDate(today, -6)); // Last 7 days
 
   const result = await syncData({startDate, endDate});
 

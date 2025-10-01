@@ -1,7 +1,5 @@
-import postgres from "postgres";
 import { users, puzzles, solves } from "@/app/lib/placeholder-data";
-
-const sql = postgres(process.env.DATABASE_URL!, { ssl: "verify-full" });
+import { sql } from "@/app/lib/db";
 
 async function seedUsers(client = sql) {
   await client`

@@ -1,10 +1,16 @@
 import "server-only";
 
-import postgres from "postgres";
+import { sql } from "@/app/lib/db";
 import { DailyBoard, Entry } from "@/app/lib/definitions";
 import { dateToStringUTC } from "@/app/lib/utils";
 
-const sql = postgres(process.env.DATABASE_URL!, { ssl: "verify-full" });
+export async function getLastSyncTime() {
+  const result = await sql`
+    SELECT MAX(last_synced_at) as last_synced_at
+    FROM sync_metadata 
+  `;
+  return result[0]?.last_synced_at;
+}
 
 export async function fetchStats(filters?: { year: number; month?: number }) {
   try {

@@ -6,30 +6,35 @@ import {
   CaretRightIcon,
 } from "@phosphor-icons/react/dist/ssr";
 
-import { syncData } from "@/app/lib/services";
+import { syncData, backfillYearData } from "@/app/lib/services";
 import { dateToStringLocal, getOffsetDate } from "../lib/utils";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export function SyncButton({ weekStartDate }: { weekStartDate: Date }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
+  const router = useRouter();
 
   const handleClick = async () => {
-    console.log("Sync button pressed on client side");
     setLoading(true);
     try {
       const result = await syncData({
         startDate: dateToStringLocal(weekStartDate),
         endDate: dateToStringLocal(getOffsetDate(weekStartDate, 6)),
       });
+
+      // const result = await backfillYearData(2024);
+
       if (result.success) {
         console.log("Sync successful:", result.stats);
+        router.refresh();
       } else {
-        console.error("Sync failed:", result.error);
-        // show error
+        throw new Error(result.error);
       }
     } catch (error) {
-      console.error("Client-side error syncing:", error);
-      // show generic error
+      console.error("Sync failed:", error);
+      setError(true);
     } finally {
       setLoading(false);
     }
@@ -39,13 +44,13 @@ export function SyncButton({ weekStartDate }: { weekStartDate: Date }) {
     <>
       <button
         onClick={handleClick}
-        disabled={loading}
+        disabled={loading || error}
         className={
           "flex flex-row justify-center items-center py-2 w-30 gap-2 bg-white rounded-full border border-gray-700 hover:bg-neutral-200 cursor-pointer disabled:cursor-not-allowed disabled:bg-neutral-200 disabled:text-gray-500"
         }
       >
         <CircleNotchIcon className={loading ? "animate-spin" : "hidden"} />
-        <div>Sync</div>
+        {!error ? <div>Sync</div> : <div className="text-red-900">Sync failed</div>}
       </button>
     </>
   );
