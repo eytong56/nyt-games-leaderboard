@@ -15,6 +15,7 @@ export default async function Header({
     hour: "numeric",
     minute: "numeric",
   }).format(lastSyncTime);
+  
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-8 py-6 w-full min-h-24 h-fit bg-white border-b border-b-gray-400 gap-8">
       <div className="flex-1">
