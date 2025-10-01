@@ -109,8 +109,10 @@ export default function Navigation({ weekStartDate }: { weekStartDate: Date }) {
   const [datepickerVisible, setDatepickerVisible] = useState(false);
 
   const handleClick = (direction: "left" | "right") => {
+    setDatepickerVisible(false);
     const offset = direction === "left" ? -7 : 7;
     const newStartDate = getOffsetDate(weekStartDate, offset);
+    setDatePicked(newStartDate);
     const params = new URLSearchParams(searchParams);
     params.set("date", dateToStringLocal(newStartDate));
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
