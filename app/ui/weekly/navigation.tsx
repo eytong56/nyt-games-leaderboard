@@ -105,6 +105,7 @@ export default function Navigation({ weekStartDate }: { weekStartDate: Date }) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const [datePicked, setDatePicked] = useState(weekStartDate);
   const [datepickerVisible, setDatepickerVisible] = useState(false);
 
   const handleClick = (direction: "left" | "right") => {
@@ -115,12 +116,14 @@ export default function Navigation({ weekStartDate }: { weekStartDate: Date }) {
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
-  const handleDateChange = (selectedDate: Date | null) => {
-    if (selectedDate === null) {
+  const handleDateChange = (date: Date | null) => {
+    setDatepickerVisible(false);
+    if (date === null) {
       return;
     } else {
+      setDatePicked(date);
       const params = new URLSearchParams(searchParams);
-      params.set("date", dateToStringLocal(selectedDate));
+      params.set("date", dateToStringLocal(date));
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     }
   };
@@ -142,7 +145,12 @@ export default function Navigation({ weekStartDate }: { weekStartDate: Date }) {
           onClick={handleDateClick}
         >
           <div className="text-center">{formatDateRange(weekStartDate)}</div>
-          <CaretDownIcon weight="fill" className={`${datepickerVisible ? "rotate-180" : ""} transition-all duration-200`}/>
+          <CaretDownIcon
+            weight="fill"
+            className={`${
+              datepickerVisible ? "rotate-180" : ""
+            } transition-all duration-200`}
+          />
         </div>
         <div
           hidden={!datepickerVisible}
@@ -152,7 +160,7 @@ export default function Navigation({ weekStartDate }: { weekStartDate: Date }) {
             <Datepicker
               inline
               weekStart={1}
-              value={weekStartDate}
+              value={datePicked}
               onChange={handleDateChange}
             />
           </ThemeProvider>
