@@ -14,8 +14,11 @@ export default async function Header({
     day: "numeric",
     hour: "numeric",
     minute: "numeric",
+    timeZone: "America/Los_Angeles",
+    timeZoneName: "short",
   }).format(lastSyncTime);
-  
+  console.log(lastSyncTime);
+
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center px-8 py-6 w-full min-h-24 h-fit bg-white border-b border-b-gray-400 gap-8">
       <div className="flex-1">
