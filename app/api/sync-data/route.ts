@@ -1,5 +1,5 @@
 import { syncData } from '@/app/lib/services';
-import { dateToStringLocal, getOffsetDate } from '@/app/lib/utils';
+import { dateToStringUTC, getOffsetDate } from '@/app/lib/utils';
 import type { NextRequest } from 'next/server';
  
 export async function GET(request: NextRequest) {
@@ -10,8 +10,8 @@ export async function GET(request: NextRequest) {
     });
   }
   const today = new Date();
-  const endDate = dateToStringLocal(getOffsetDate(today, 1)) // One day after
-  const startDate = dateToStringLocal(getOffsetDate(today, -6)); // Last 7 days
+  const endDate = dateToStringUTC(getOffsetDate(today, 1)) // One day after
+  const startDate = dateToStringUTC(getOffsetDate(today, -6)); // Last 7 days
 
   const result = await syncData({startDate, endDate});
 

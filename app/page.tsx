@@ -1,7 +1,7 @@
 import Header from "@/app/ui/header";
 import Sidebar from "@/app/ui/stats/sidebar";
 import WeeklyDisplay from "@/app/ui/weekly/weekly-display";
-import { setDateToMonday } from "@/app/lib/utils";
+import { setDateToLocal, setDateToMonday } from "@/app/lib/utils";
 
 export default async function Page({
   searchParams,
@@ -9,10 +9,13 @@ export default async function Page({
   searchParams: Promise<{ date?: string }>;
 }) {
   const dateSearchParams = await searchParams;
+  const today = new Date();
+  setDateToLocal(today)
   const weekStartDate = dateSearchParams.date
     ? new Date(dateSearchParams.date)
-    : new Date();
-
+    : today;
+  
+  // console.log(weekStartDate)
   setDateToMonday(weekStartDate);
 
   return (

@@ -1,6 +1,6 @@
 import { ArrowUpRightIcon } from "@phosphor-icons/react/ssr";
 import {
-  dateToStringLocal,
+  dateToStringUTC,
   getOffsetDate,
   formatDate,
   formatLink,
@@ -20,8 +20,8 @@ const placeholderBoard: PuzzleBoard = {
 
 export async function CardWrapper({ weekStartDate }: { weekStartDate: Date }) {
   const dailyBoards = await fetchWeek(
-    dateToStringLocal(weekStartDate),
-    dateToStringLocal(getOffsetDate(weekStartDate, 6))
+    dateToStringUTC(weekStartDate),
+    dateToStringUTC(getOffsetDate(weekStartDate, 6))
   );
   const cards = dailyBoards.map((dailyBoard) => {
     return <Card key={dailyBoard.date} dailyBoard={dailyBoard} />;

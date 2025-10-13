@@ -1,10 +1,25 @@
 import { Entry } from "@/app/lib/definitions";
 
+export const setDateToLocal = (date: Date) => {
+  const localHour = Number(new Intl.DateTimeFormat("en-US", {
+    hour: "numeric",
+    timeZone: "America/Los_Angeles",
+    hour12: false,
+  }).format(date));
+  let offset;
+  if (localHour > date.getUTCHours()) {
+    offset = (localHour - 24) - date.getUTCHours()
+  } else {
+    offset = localHour - date.getUTCHours()
+  }
+  date.setHours(date.getUTCHours() + offset);
+};
+
 export const dateToStringLocal = (date: Date) => {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(
     2,
     "0"
-  )}-${String(date.getDate()).padStart(2, "0")}`;
+  )}-${String(date.getUTCDate()).padStart(2, "0")}`;
 };
 
 export const dateToStringUTC = (date: Date) => {
@@ -13,40 +28,31 @@ export const dateToStringUTC = (date: Date) => {
 
 export const getOffsetDate = (startDate: Date, offset: number) => {
   const endDate = new Date(startDate);
-  endDate.setDate(startDate.getDate() + offset);
+  endDate.setDate(endDate.getDate() + offset);
   return endDate;
 };
 
 export const setDateToMonday = (date: Date) => {
-  const offset = (date.getDay() - 1) % 7;
-  date.setDate(date.getDate() - offset);
+  const offset = (date.getUTCDay() + 6) % 7;
+  date.setDate(date.getUTCDate() - offset);
 };
 
 export const formatDateRange = (startDate: Date) => {
   const endDate = getOffsetDate(startDate, 6);
-  if (startDate.getFullYear() === endDate.getFullYear()) {
-    if (startDate.getMonth() === endDate.getMonth()) {
-      return `${startDate.toLocaleString("en-US", {
-        month: "short",
-      })} ${startDate.getDate()} - ${endDate.getDate()}, ${endDate.getFullYear()}
+  if (startDate.getUTCFullYear() === endDate.getUTCFullYear()) {
+    if (startDate.getUTCMonth() === endDate.getUTCMonth()) {
+      return `${monthNameShort[startDate.getUTCMonth()]} ${startDate.getUTCDate()} - ${endDate.getUTCDate()}, ${endDate.getUTCFullYear()}
     `;
     } else {
       return `${startDate.toLocaleString("en-US", {
         month: "short",
-      })} ${startDate.getDate()} - ${endDate.toLocaleString("en-US", {
+      })} ${startDate.getUTCDate()} - ${endDate.toLocaleString("en-US", {
         month: "short",
-      })} ${endDate.getDate()}, ${endDate.getFullYear()}
+      })} ${endDate.getUTCDate()}, ${endDate.getUTCFullYear()}
     `;
     }
   } else {
-    return `${startDate.toLocaleString("en-US", {
-      month: "short",
-    })} ${startDate.getDate()}, ${startDate.getFullYear()} - ${endDate.toLocaleString(
-      "en-US",
-      {
-        month: "short",
-      }
-    )} ${endDate.getDate()}, ${endDate.getFullYear()}
+    return `${monthNameShort[startDate.getUTCMonth()]} ${startDate.getUTCDate()}, ${startDate.getUTCFullYear()} - ${monthNameShort[endDate.getUTCMonth()]} ${endDate.getUTCDate()}, ${endDate.getUTCFullYear()}
     `;
   }
 };
@@ -91,3 +97,7 @@ export const determineWinner = (entries: Entry[] | undefined) => {
     ? "tie"
     : entries[0].user;
 };
+
+export const monthNameShort = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];

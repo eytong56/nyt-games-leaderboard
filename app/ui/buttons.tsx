@@ -7,7 +7,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 
 import { syncData, backfillYearData } from "@/app/lib/services";
-import { dateToStringLocal, getOffsetDate } from "../lib/utils";
+import { dateToStringUTC, getOffsetDate } from "../lib/utils";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -20,8 +20,8 @@ export function SyncButton({ weekStartDate }: { weekStartDate: Date }) {
     setLoading(true);
     try {
       const result = await syncData({
-        startDate: dateToStringLocal(weekStartDate),
-        endDate: dateToStringLocal(getOffsetDate(weekStartDate, 6)),
+        startDate: dateToStringUTC(weekStartDate),
+        endDate: dateToStringUTC(getOffsetDate(weekStartDate, 6)),
       });
 
       // const result = await backfillYearData(2024);
@@ -72,7 +72,7 @@ export function NavButton({
   return (
     <button
       onClick={() => handleClick(direction)}
-      className="w-12 h-12 flex justify-center items-center bg-white rounded-full border border-gray-400 cursor-pointer hover:bg-neutral-200"
+      className="min-w-12 h-12 flex justify-center items-center bg-white rounded-full border border-gray-400 cursor-pointer hover:bg-neutral-200"
     >
       {icon}
     </button>

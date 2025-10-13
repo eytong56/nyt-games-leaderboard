@@ -1,7 +1,7 @@
 "use client";
 
 import {
-  dateToStringLocal,
+  dateToStringUTC,
   formatDateRange,
   getOffsetDate,
 } from "@/app/lib/utils";
@@ -114,7 +114,7 @@ export default function Navigation({ weekStartDate }: { weekStartDate: Date }) {
     const newStartDate = getOffsetDate(weekStartDate, offset);
     setDatePicked(newStartDate);
     const params = new URLSearchParams(searchParams);
-    params.set("date", dateToStringLocal(newStartDate));
+    params.set("date", dateToStringUTC(newStartDate));
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   };
 
@@ -125,7 +125,7 @@ export default function Navigation({ weekStartDate }: { weekStartDate: Date }) {
     } else {
       setDatePicked(date);
       const params = new URLSearchParams(searchParams);
-      params.set("date", dateToStringLocal(date));
+      params.set("date", dateToStringUTC(date));
       router.replace(`${pathname}?${params.toString()}`, { scroll: false });
     }
   };
@@ -135,10 +135,10 @@ export default function Navigation({ weekStartDate }: { weekStartDate: Date }) {
   };
 
   return (
-    <div className="w-full max-w-120 flex flex-row justify-between">
+    <div className="w-full max-w-120 flex flex-row justify-between gap-4">
       <NavButton direction="left" handleClick={handleClick} />
       <div
-        className={`relative w-60 px-4 py-3 rounded-lg border border-black ${
+        className={`relative shrink w-60 max-w-60 px-4 py-3 rounded-lg border border-black ${
           !datepickerVisible ? "bg-white" : "bg-neutral-200 text-gray-500"
         } hover:bg-neutral-200 cursor-pointer`}
       >
