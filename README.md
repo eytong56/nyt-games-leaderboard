@@ -1,5 +1,5 @@
 # Custom NYT Games Leaderboard
-A custom NYT Games leaderboard for my friends and I, built using Next.js with TypeScript, PostGreSQL, and Tailwind CSS. Deployed and hosted using Vercel and Neon at [nyt-games-leaderboard.vercel.app]("nyt-games-leaderboard.vercel.app").
+A custom NYT Games leaderboard for my friends and I, built using Next.js with TypeScript, PostgreSQL, and Tailwind CSS. Deployed and hosted on Vercel (with Neon) at [nyt-games-leaderboard.vercel.app](https://nyt-games-leaderboard.vercel.app/)
 
 ## Motivation
 The current NYT Games leaderboard is no longer supported on desktop (mobile-only), and only shows rankings day-by-day. I want to be able to see how I'm doing against my friends across the entire week, month, or even year without having to manually count.
@@ -23,7 +23,10 @@ Used client components for navigation so that the interface remains interactive 
 
 ## Backend
 
-Most challenging part of the implementation was making multiple queries to the external NYT Games API and filtering out unnecessary information as to not overwhelm the endpoint and fetch redundant information. Relevant information from the API is then inserted into my database.
+Most challenging part of the implementation was making multiple queries to the external NYT Games API, and filtering out unnecessary information as to not overwhelm the endpoint and fetch redundant information. Relevant information from the API is then inserted into my database.
 
-The database includes: `puzzles` table to store information about each puzzle including date, puzzle_id, and the puzzle board itself. `solves` table to store each user's solve statistics for a specific puzzle.
+The database includes: 
+- `users` table to store users on the leaderboards.
+- `puzzles` table to store information about each puzzle including date, puzzle_id, and the puzzle board itself.
+- `solves` table to store each user's solve statistics for puzzles.
 
