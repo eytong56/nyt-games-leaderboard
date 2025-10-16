@@ -1,36 +1,29 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Custom NYT Games Leaderboard
+A custom NYT Games leaderboard for my friends and I, built using Next.js with TypeScript, PostGreSQL, and Tailwind CSS. Deployed and hosted using Vercel and Neon at [nyt-games-leaderboard.vercel.app]("nyt-games-leaderboard.vercel.app").
 
-## Getting Started
+## Motivation
+The current NYT Games leaderboard is no longer supported on desktop (mobile-only), and only shows rankings day-by-day. I want to be able to see how I'm doing against my friends across the entire week, month, or even year without having to manually count.
 
-First, run the development server:
+## Requirements for MVP
+- Ability to see head-to-head rankings for all-time, the current year, and the current month.
+- Visual overview of the rankings for the week, with easy navigation between consecutive weeks and dropdown to select a specific week/date.
+    - Can quickly view the Mini puzzle board (for discussion/reminder), and quickly navigate to the actual puzzle page.
+- Automated daily sync and manual sync button (to backfill or when solving older Minis).
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## Visual Inspiration
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+- Reminiscent of the NYT News and Games desktop sites and mobile apps to invoke the feeling of still being on the NYT site.
+- Rounded edges, harsh shadows, gray-scale with pops of colors.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+# Implementation Details
+## Frontend
+Created server components that query the database directly, and utilized `<Suspense>` around data heavy server components to improve user experience while puzzle and solve data is being fetched from the database.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Used client components for navigation so that the interface remains interactive while data is streaming in.
 
-## Learn More
+## Backend
 
-To learn more about Next.js, take a look at the following resources:
+Most challenging part of the implementation was making multiple queries to the external NYT Games API and filtering out unnecessary information as to not overwhelm the endpoint and fetch redundant information. Relevant information from the API is then inserted into my database.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The database includes: `puzzles` table to store information about each puzzle including date, puzzle_id, and the puzzle board itself. `solves` table to store each user's solve statistics for a specific puzzle.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
